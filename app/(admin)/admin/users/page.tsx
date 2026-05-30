@@ -23,9 +23,9 @@ export default function UsersPage() {
         setError(null);
         const fetchedUsers = await getAdminUsers();
         setUsers(fetchedUsers);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching users:', err);
-        setError(err?.message || 'Failed to load users.');
+        setError(err instanceof Error ? err.message : 'Failed to load users.');
       } finally {
         setLoading(false);
       }

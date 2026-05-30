@@ -19,9 +19,9 @@ export default function TransactionPage() {
         setError(null);
         const data = await getAdminTransactions();
         setTransactions(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching transactions:", err);
-        setError(err?.message || "Failed to load transactions.");
+        setError(err instanceof Error ? err.message : "Failed to load transactions.");
       } finally {
         setLoading(false);
       }

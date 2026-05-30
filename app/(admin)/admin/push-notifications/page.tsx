@@ -21,9 +21,9 @@ export default function PushNotificationsPage() {
                 setError(null);
                 const data = await getAdminPushNotifications();
                 setNotifications(data);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Error fetching push notifications:", err);
-                setError(err?.message || "Failed to load push notifications.");
+                setError(err instanceof Error ? err.message : "Failed to load push notifications.");
             } finally {
                 setLoading(false);
             }
@@ -53,9 +53,9 @@ export default function PushNotificationsPage() {
         try {
             const newNotification = await createAdminPushNotification({ title, message });
             setNotifications((prev) => [newNotification, ...prev]);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error creating push notification:", err);
-            alert(err?.message || "Failed to create push notification.");
+            alert(err instanceof Error ? err.message : "Failed to create push notification.");
         }
     };
 

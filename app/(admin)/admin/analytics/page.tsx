@@ -23,9 +23,9 @@ export default function AnalyticsPage() {
                 ]);
                 setMetrics(fetchedMetrics);
                 setRecentUsers(fetchedUsers.slice(0, 5));
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Error fetching analytics data:", err);
-                setError(err?.message || "Failed to load analytics data.");
+                setError(err instanceof Error ? err.message : "Failed to load analytics data.");
             } finally {
                 setLoading(false);
             }
