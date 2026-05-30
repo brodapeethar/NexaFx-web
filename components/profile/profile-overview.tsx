@@ -24,6 +24,8 @@ export function ProfileOverview() {
           setAuth(
             {
               id: data.id,
+              firstName: data.firstName,
+              lastName: data.lastName,
               name: `${data.firstName} ${data.lastName}`,
               email: data.email,
               role: 'USER',

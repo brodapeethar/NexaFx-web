@@ -48,6 +48,8 @@ export function ProfileEditForm() {
       setAuth(
         {
           id: updated.id,
+          firstName: updated.firstName,
+          lastName: updated.lastName,
           name: `${updated.firstName} ${updated.lastName}`,
           email: updated.email,
           role: 'USER',

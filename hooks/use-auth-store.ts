@@ -13,7 +13,9 @@ export interface UserProfileStore {
 
 interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  name: string; // derived from firstName + lastName
   email: string;
   role: "USER" | "ADMIN";
   // Optionally add more fields if needed

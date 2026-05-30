@@ -72,8 +72,9 @@ export default function VerifyOtpPage() {
     setIsLoading(true);
     setError('');
     try {
-      const res = await verifyLoginOtp({ email: storedEmail, otp: otpCode }) as { user: { id: string; name: string; email: string; role: 'USER' | 'ADMIN' }; accessToken: string; refreshToken: string };
-      setAuth(res.user, res.accessToken, res.refreshToken);
+      const res = await verifyLoginOtp({ email: storedEmail, otp: otpCode }) as { user: { id: string; firstName: string; lastName: string; email: string; role: 'USER' | 'ADMIN' }; accessToken: string; refreshToken: string };
+      const fullName = [res.user.firstName, res.user.lastName].filter(Boolean).join(' ');
+      setAuth({ ...res.user, name: fullName }, res.accessToken, res.refreshToken);
       setIsLoading(false);
       router.push('/dashboard');
     } catch (err: unknown) {
