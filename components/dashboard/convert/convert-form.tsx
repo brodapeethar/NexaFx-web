@@ -141,8 +141,9 @@ export function ConvertForm() {
                 });
                 setBalances(newBalances);
             }
-        } catch (err: any) {
-            setErrors({ amount: err.message || "An error occurred during conversion" });
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "An error occurred during conversion";
+            setErrors({ amount: errorMessage });
         } finally {
             setIsSubmitting(false);
         }
