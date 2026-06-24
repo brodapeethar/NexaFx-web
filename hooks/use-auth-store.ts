@@ -10,6 +10,8 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   setAuth: (user: User | null) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
+  logout: () => void;
 }
 
 // Temporary mock auth state for v2 scaffold.
@@ -22,4 +24,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   isAuthenticated: true,
   setAuth: (user) => set({ user, isAuthenticated: !!user }),
+  setTokens: (accessToken, refreshToken) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('refresh_token', refreshToken);
+    }
+  },
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+    }
+    set({ user: null, isAuthenticated: false });
+  },
 }));
