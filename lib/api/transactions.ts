@@ -1,22 +1,22 @@
-import { apiClient } from "../api-client";
+import { apiClient } from "@/lib/api-client";
 
-export type TransactionStatus = "Success" | "Pending" | "Failed";
 export type TransactionType = "Deposit" | "Withdraw" | "Convert";
+export type TransactionStatus = "Success" | "Failed" | "Pending";
 
 export interface Transaction {
   id: string;
   type: TransactionType;
-  currency: string;
-  toCurrency?: string;
-  amount: number;
-  amountString: string;
-  date: string;
   status: TransactionStatus;
+  amount: number;
+  currency: string;
+  amountString: string;
+  toAmount?: number;
+  toCurrency?: string;
+  createdAt: string;
   reference: string;
   description?: string;
   fee?: number;
   exchangeRate?: number;
-  toAmount?: number;
   walletAddress?: string;
 }
 
@@ -52,12 +52,8 @@ function mapTransaction(dto: Record<string, any>): Transaction {
     failed: "Failed",
   };
 
-  const type =
-    typeMap[(dto.type as string)?.toLowerCase()] ?? (dto.type as TransactionType);
-  const status =
-    statusMap[(dto.status as string)?.toLowerCase()] ??
-    (dto.status as TransactionStatus);
-
+  const type = typeMap[(dto.type as string)?.toLowerCase()] ?? (dto.type as TransactionType);
+  const status = statusMap[(dto.status as string)?.toLowerCase()] ?? (dto.status as TransactionStatus);
   const amount = Number(dto.amount) || 0;
   const currency = (dto.currency as string) ?? "";
 
@@ -65,37 +61,25 @@ function mapTransaction(dto: Record<string, any>): Transaction {
   if (type === "Deposit") amountString = `+ ${amountString}`;
   else if (type === "Withdraw") amountString = `- ${amountString}`;
 
-  const rawDate = (dto.createdAt ?? dto.date ?? dto.created_at) as string;
-  const date = rawDate
-    ? new Date(rawDate).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
+  const toAmount = type === "Convert" ? (Number(dto.toAmount ?? dto.to_amount) || undefined) : undefined;
+  const toCurrency = type === "Convert" ? ((dto.toCurrency ?? dto.to_currency) as string | undefined) : undefined;
+  const createdAt = (dto.createdAt ?? dto.date ?? dto.created_at ?? new Date().toISOString()) as string;
 
   return {
     id: (dto.id ?? dto._id) as string,
     type,
-    currency,
-    toCurrency: (dto.toCurrency ?? dto.to_currency) as string | undefined,
-    amount,
-    amountString,
-    date,
     status,
-    reference: (dto.reference ??
-      dto.transactionRef ??
-      dto.transaction_ref ??
-      "") as string,
+    amount,
+    currency,
+    amountString,
+    toAmount,
+    toCurrency,
+    createdAt,
+    reference: (dto.reference ?? dto.transactionRef ?? dto.transaction_ref ?? "") as string,
     description: dto.description as string | undefined,
     fee: dto.fee as number | undefined,
     exchangeRate: (dto.exchangeRate ?? dto.exchange_rate) as number | undefined,
-    toAmount: (dto.toAmount ?? dto.to_amount) as number | undefined,
-    walletAddress: (dto.walletAddress ??
-      dto.wallet_address ??
-      dto.fromWallet) as string | undefined,
+    walletAddress: (dto.walletAddress ?? dto.wallet_address ?? dto.fromWallet) as string | undefined,
   };
 }
 
@@ -107,8 +91,7 @@ export async function getTransactions(
   if (query.limit) params.limit = String(query.limit);
   if (query.search) params.search = query.search;
   if (query.type && query.type !== "All") {
-    const typeParam =
-      query.type === "Withdraw" ? "withdrawal" : query.type.toLowerCase();
+    const typeParam = query.type === "Withdraw" ? "withdrawal" : query.type.toLowerCase();
     params.type = typeParam;
   }
   if (query.from) params.from = query.from;
@@ -128,10 +111,7 @@ export async function getTransactions(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = (json.data ?? json.transactions ?? json.items ?? []) as Record<string, any>[];
-  const total = (json.total ??
-    json.totalCount ??
-    json.count ??
-    data.length) as number;
+  const total = (json.total ?? json.totalCount ?? json.count ?? data.length) as number;
   const page = (json.page ?? query.page ?? 1) as number;
   const limit = (json.limit ?? query.limit ?? 10) as number;
 
