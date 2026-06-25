@@ -1,18 +1,18 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Transaction, getTransactions } from "@/lib/api/transactions";
 import { TransactionTable } from "@/components/dashboard/transaction-table";
+import { TransactionDetails } from "@/components/transactions/transaction-details";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState(0);
+  const [selected, setSelected] = useState<Transaction | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-
     const fetchTx = async () => {
       setIsLoading(true);
       setError(null);
@@ -31,9 +31,7 @@ export default function TransactionsPage() {
         }
       }
     };
-
     fetchTx();
-
     return () => {
       cancelled = true;
     };
@@ -44,7 +42,6 @@ export default function TransactionsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Transaction History</h1>
       </div>
-
       <div className="bg-card rounded-xl p-4 md:p-6 shadow-sm border border-border/50">
         {isLoading ? (
           <div className="space-y-4 animate-pulse">
@@ -82,9 +79,17 @@ export default function TransactionsPage() {
             <p className="text-lg font-medium text-muted-foreground">No transactions yet</p>
           </div>
         ) : (
-          <TransactionTable transactions={transactions} />
+          <TransactionTable
+            transactions={transactions}
+            onSelectTransaction={setSelected}
+          />
         )}
       </div>
+      <TransactionDetails
+        transaction={selected}
+        open={!!selected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
