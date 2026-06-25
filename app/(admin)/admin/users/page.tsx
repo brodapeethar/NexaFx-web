@@ -109,7 +109,10 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchUsers]);
 
   // Filter users based on search query
