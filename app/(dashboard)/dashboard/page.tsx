@@ -5,12 +5,15 @@ import { MarketOverview } from "@/components/dashboard/market-overview";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { WithdrawalModal } from "@/components/dashboard/withdrawal/WithdrawalModal";
 import { useWithdrawalStore } from "@/hooks/useWithdrawalStore";
-import { useDepositStore } from "@/hooks/use-deposit-store";
 import { Download, Upload } from "lucide-react";
+import { useState } from "react";
 
 export default function DashboardPage() {
-  const { isOpen: openDeposit, toggle: toggleDeposit } = useDepositStore();
+  const [openDeposit, setOpenDeposit] = useState(false);
   const openWithdrawal = useWithdrawalStore((state) => state.open);
+  const toggleDeposit = () => {
+    setOpenDeposit(!openDeposit);
+  };
 
   return (
     <div className="flex flex-col gap-5 md:gap-10">

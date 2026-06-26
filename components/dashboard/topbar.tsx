@@ -5,24 +5,14 @@ import { Bell, Menu, User, Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSidebarStore } from "@/hooks/use-sidebar-store";
+import { useAuthStore } from "@/hooks/use-auth-store";
 import { useNotificationsStore } from "@/hooks/use-notifications-store";
 import { NotificationsPanel } from "@/components/notifications";
-import { useAuthStore } from "@/hooks/use-auth-store";
 
 export function Topbar() {
   const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
-
-  const displayName = (() => {
-    if (!user) return "User";
-    const first = (user.firstName || "").trim();
-    const last = (user.lastName || "").trim();
-    const cleanFirst = (first === "undefined" || first === "null") ? "" : first;
-    const cleanLast = (last === "undefined" || last === "null") ? "" : last;
-    const fullName = `${cleanFirst} ${cleanLast}`.trim();
-    return fullName || "User";
-  })();
   const openSidebar = useSidebarStore((state) => state.open);
+  const user = useAuthStore((state) => state.user);
 
   // Initialize state with a function that checks DOM on mount
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -123,13 +113,15 @@ export function Topbar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground hidden sm:inline-block">
-            {displayName}
+        <div className="hidden sm:flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">
+            {user?.firstName && user?.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user?.name || ""}
           </span>
-          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border">
-            <User className="h-6 w-6 text-muted-foreground" />
-          </div>
+        </div>
+        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border">
+          <User className="h-6 w-6 text-muted-foreground" />
         </div>
       </div>
     </header>
