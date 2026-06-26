@@ -7,13 +7,13 @@ export default function Footer() {
         <div>
           <Image
             src="/logo.png"
-            alt="NexaFx Logo"
+            alt="NexaFX Logo"
             width={120}
             height={40}
             className="object-contain mb-4"
           />
           <p className="text-sm text-slate-500 max-w-sm">
-            Secure and fast Web3 currency exchange platform powered by Stellar.
+            Secure and fast Web3 currency exchange platform.
           </p>
         </div>
 
@@ -24,12 +24,14 @@ export default function Footer() {
             <p className="mb-4 text-gray-500">Wallet</p>
             <p className="mb-4 text-gray-500">Rates</p>
           </div>
+
           <div>
             <p className="font-bold mb-4">LEGAL</p>
             <p className="mb-4 text-gray-500">Privacy</p>
             <p className="mb-4 text-gray-500">Terms</p>
             <p className="mb-4 text-gray-500">Security</p>
           </div>
+
           <div>
             <p className="font-bold mb-4">COMPANY</p>
             <p className="mb-4 text-gray-500">Support</p>
@@ -38,8 +40,9 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
       <p className="text-center text-xs text-slate-400 mt-10">
-        &copy; {new Date().getFullYear()} NexaFx. All rights reserved.
+        © 2024 NexaFX. All rights reserved.
       </p>
     </footer>
   );

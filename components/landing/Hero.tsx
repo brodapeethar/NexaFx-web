@@ -3,18 +3,19 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="flex flex-col md:flex-row max-w-[1440px] mx-auto px-6 md:px-12 gap-12 lg:gap-24 items-center mb-32">
+    <section className="flex flex-col md:flex-row max-w-360 mx-auto px-6 md:px-12 md:py- gap-12 lg:gap-30 items-center mb-32">
       <div className="w-full md:w-1/2">
-        <div className="inline-flex items-center gap-2 bg-brand/10 px-4 py-1.5 rounded-full mb-6">
-          <span className="w-2 h-2 bg-brand rounded-full animate-pulse" />
-          <span className="text-brand text-sm font-semibold uppercase">
+        <div className="inline-flex items-center gap-2 bg-[#F39A00]/10 px-4 py-1.5 rounded-full mb-6">
+          <span className="w-2 h-2 bg-[#F39A00] rounded-full animate-pulse" />
+          <span className="text-[#F39A00] text-sm font-semibold uppercase">
             Web3 Evolution is here
           </span>
         </div>
 
         <h1 className="font-bold text-5xl md:text-7xl mb-6 leading-tight">
           Seamless Crypto & Fiat{" "}
-          <span className="text-brand">Exchange</span>
+          <span className="text-[#F39A00]">Exchange</span>
+          <br />
         </h1>
 
         <p className="text-lg text-slate-600 font-medium mb-10 max-w-2xl">
@@ -26,15 +27,16 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
             href="/signup"
-            className="bg-brand text-primary-foreground text-center px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition"
+            className="bg-[#F39A00] text-white text-center px-8 py-4 rounded-lg font-bold text-lg"
           >
-            Get Started
+            Sign Up
           </Link>
+
           <Link
-            href="/login"
-            className="bg-slate-200 text-center px-8 py-4 rounded-lg text-lg font-bold hover:bg-slate-300 transition"
+            href="/sign-in"
+            className="bg-slate-300/50  text-center px-8 py-4 rounded-lg text-lg font-bold"
           >
-            Login
+            Sign In
           </Link>
         </div>
       </div>
