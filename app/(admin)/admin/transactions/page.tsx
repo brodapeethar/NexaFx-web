@@ -1,172 +1,130 @@
-"use client";
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
+'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
-import { getAdminTransactions } from "../../../../lib/api/admin";
-import { Transaction } from "../../../../lib/api/transactions";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { TableTransaction } from "@/components/admin/transaction/TableTransaction";
+import { TransactionFilters } from "@/components/admin/transaction/TransactionFilters";
+import { getAdminTransactions, AdminTransaction } from "@/lib/api/admin";
 
-const TYPE_OPTIONS = ["All", "Deposit", "Withdraw", "Convert"] as const;
-const STATUS_OPTIONS = ["All", "Success", "Failed", "Pending"] as const;
+const ITEMS_PER_PAGE = 10;
 
-export default function AdminTransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[] | null>(null);
+export default function TransactionPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string>("All");
-  const [statusFilter, setStatusFilter] = useState<string>("All");
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 350);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const loadTransactions = async () => {
+    try {
+      setLoading(true);
+      const res = await getAdminTransactions({
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+        search: debouncedSearch,
+        type: activeFilter,
+      });
+      setTransactions(res.data);
+      setTotalCount(res.total);
+      setError(null);
+    } catch (err: any) {
+      console.error("Failed to load admin transactions", err);
+      setError(err?.message || "Failed to fetch transactions. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    setError(null);
-    getAdminTransactions()
-      .then((data) => {
-        if (!mounted) return;
-        setTransactions(data);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setError(err?.message || "Failed to load transactions");
-        setTransactions([]);
-      })
-      .finally(() => {
-        if (!mounted) return;
-        setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    loadTransactions();
+  }, [currentPage, debouncedSearch, activeFilter]);
 
-  const filtered = useMemo(() => {
-    if (!transactions) return null;
-    return transactions.filter((t) => {
-      if (typeFilter !== "All" && t.type !== typeFilter) return false;
-      if (statusFilter !== "All" && t.status !== statusFilter) return false;
-      return true;
-    });
-  }, [transactions, typeFilter, statusFilter]);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endEntry = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
+
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleSeeAll = () => {
+    setCurrentPage(1);
+    setSearchQuery("");
+    setActiveFilter("All");
+  };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1 style={{ fontSize: 20, marginBottom: 12 }}>Transactions</h1>
-
-      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-        <div>
-          <strong>Type:</strong>
-          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-            {TYPE_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setTypeFilter(opt)}
-                style={{
-                  padding: "6px 10px",
-                  background: typeFilter === opt ? "#1f2937" : "#f3f4f6",
-                  color: typeFilter === opt ? "#fff" : "#000",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                }}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <strong>Status:</strong>
-          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-            {STATUS_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setStatusFilter(opt)}
-                style={{
-                  padding: "6px 10px",
-                  background: statusFilter === opt ? "#1f2937" : "#f3f4f6",
-                  color: statusFilter === opt ? "#fff" : "#000",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                }}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {loading && (
-        <div>
-          <div style={{ display: "grid", gap: 8 }}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  height: 40,
-                  background: "#e5e7eb",
-                  borderRadius: 6,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!loading && error && (
-        <div style={{ padding: 16, background: "#fee2e2", borderRadius: 6 }}>
-          <div style={{ marginBottom: 8 }}>
-            <strong>Error:</strong> {error}
-          </div>
-          <button
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              getAdminTransactions()
-                .then((d) => setTransactions(d))
-                .catch((err) => setError(err?.message || "Failed to load"))
-                .finally(() => setLoading(false));
-            }}
-            style={{ padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}
+    <div className="space-y-6">
+      <TransactionFilters 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        totalCount={totalCount}
+      />
+      
+      {error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center text-red-600">
+          <p className="font-semibold">{error}</p>
+          <button 
+            onClick={loadTransactions} 
+            className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
             Retry
           </button>
         </div>
-      )}
-
-      {!loading && !error && filtered && filtered.length === 0 && (
-        <div style={{ padding: 24, background: "#f8fafc", borderRadius: 6 }}>
-          No transactions found.
+      ) : loading ? (
+        <div className="flex justify-center items-center py-20 bg-white rounded-2xl border border-gray-100">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
         </div>
-      )}
-
-      {!loading && !error && filtered && filtered.length > 0 && (
-        <div style={{ overflowX: "auto", marginTop: 12 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: "left", padding: 8 }}>User Email</th>
-                <th style={{ textAlign: "left", padding: 8 }}>Type</th>
-                <th style={{ textAlign: "right", padding: 8 }}>Amount</th>
-                <th style={{ textAlign: "left", padding: 8 }}>Currency</th>
-                <th style={{ textAlign: "left", padding: 8 }}>Status</th>
-                <th style={{ textAlign: "left", padding: 8 }}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((t) => (
-                <tr key={t.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                  <td style={{ padding: 8 }}>{t.user?.email || "-"}</td>
-                  <td style={{ padding: 8 }}>{t.type}</td>
-                  <td style={{ padding: 8, textAlign: "right" }}>{t.amount.toFixed(2)}</td>
-                  <td style={{ padding: 8 }}>{t.currency}</td>
-                  <td style={{ padding: 8 }}>{t.status}</td>
-                  <td style={{ padding: 8 }}>{new Date(t.createdAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      ) : (
+        <>
+          <TableTransaction transactions={transactions} />
+          
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-gray-600">
+              Showing {startEntry} to {endEntry} of {totalCount} entries
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleSeeAll}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                See All
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages || totalCount === 0}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
