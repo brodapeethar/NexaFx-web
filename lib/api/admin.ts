@@ -157,58 +157,39 @@ export async function updateUserKyc(id: string, status: 'Verified' | 'Unverified
     });
 }
 
-// ==================== System Health (#324) ====================
+export const flagTransaction = (id: string, reason: string): Promise<void> =>
+  apiClient(`/admin/transactions/${id}/flag`, { method: 'POST', body: JSON.stringify({ reason }), headers: getAuthHeaders() });
 
-export type ServiceStatus = 'ok' | 'degraded' | 'down' | 'unknown'
+export const unflagTransaction = (id: string): Promise<void> =>
+  apiClient(`/admin/transactions/${id}/unflag`, { method: 'POST', headers: getAuthHeaders() });
 
-export interface SystemHealth {
-  api: ServiceStatus
-  database: ServiceStatus
-  stellar: ServiceStatus
-  moonpay: ServiceStatus
-  exchangeRates: ServiceStatus
-  lastChecked: string
-}
-
-export const getSystemHealth = (): Promise<SystemHealth> =>
-  apiClient('/admin/health', { headers: getAuthHeaders() })
-
-// ==================== KYC Review (#323) ====================
-
-export interface KycDocument {
-  type: 'id_front' | 'id_back' | 'selfie' | 'proof_of_address'
-  url: string
-  uploadedAt: string
-}
-
-export interface KycSubmission {
+export interface Dispute {
+  id: string
   userId: string
-  email: string
-  firstName: string
-  lastName: string
-  submittedAt: string
-  documents: KycDocument[]
+  userEmail: string
+  transactionId: string
+  description: string
+  status: 'Open' | 'Under Review' | 'Resolved'
+  notes: DisputeNote[]
+  createdAt: string
+  resolvedAt?: string
 }
 
-export const getPendingKyc = (): Promise<KycSubmission[]> =>
-  apiClient('/admin/kyc/pending', { headers: getAuthHeaders() })
+export interface DisputeNote {
+  id: string
+  adminEmail: string
+  content: string
+  createdAt: string
+}
 
-export const getKycSubmission = (userId: string): Promise<KycSubmission> =>
-  apiClient(`/admin/kyc/${userId}`, { headers: getAuthHeaders() })
+export const getDisputes = (): Promise<Dispute[]> =>
+  apiClient('/admin/disputes', { headers: getAuthHeaders() });
 
-export const approveKyc = (userId: string): Promise<void> =>
-  apiClient(`/admin/kyc/${userId}/approve`, { method: 'POST', headers: getAuthHeaders() })
+export const resolveDispute = (id: string, resolution: string): Promise<void> =>
+  apiClient(`/admin/disputes/${id}/resolve`, { method: 'POST', body: JSON.stringify({ resolution }), headers: getAuthHeaders() });
 
-export const rejectKyc = (userId: string, reason: string): Promise<void> =>
-  apiClient(`/admin/kyc/${userId}/reject`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ reason }) })
-
-// ==================== Bulk User Actions (#322) ====================
-
-export const bulkDeactivateUsers = (userIds: string[]): Promise<void> =>
-  apiClient('/admin/users/bulk-deactivate', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ userIds }) })
-
-export const bulkSendNotification = (userIds: string[], title: string, message: string): Promise<void> =>
-  apiClient('/admin/push-notifications/bulk', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ userIds, title, message }) })
+export const addDisputeNote = (id: string, content: string): Promise<DisputeNote> =>
+  apiClient(`/admin/disputes/${id}/notes`, { method: 'POST', body: JSON.stringify({ content }), headers: getAuthHeaders() });
 
 export async function getAdminTransactions(query: AdminTransactionsQuery = {}): Promise<{ data: AdminTransaction[]; total: number }> {
     const params: Record<string, string> = {};
