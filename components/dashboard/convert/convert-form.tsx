@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronDown, AlertCircle, ArrowDownUp, Loader2 } from "lucide-react";
 import { InfoIcon } from "@/components/ui/info-icon";
 import { cn } from "@/lib/utils";
 import { getBalances } from "@/lib/api/wallet";
 import { createSwap } from "@/lib/api/transactions";
-import { getExchangeRate } from "@/lib/api/exchange-rates";
 import { getRequestErrorMessage } from "@/lib/api-client";
 
 interface CurrencyOption {
@@ -37,7 +36,6 @@ export function ConvertForm() {
   const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rateError, setRateError] = useState<string | null>(null);
-  const hadExchangeRateRef = useRef(false);
 
   const fromCurrencyData =
     CURRENCIES.find((c) => c.id === fromCurrency) || CURRENCIES[0];
@@ -105,31 +103,6 @@ export function ConvertForm() {
             active = false;
         };
     }, [fromCurrency, toCurrency]);
-
-    getExchangeRate(fromCurrency, toCurrency)
-      .then((data) => {
-        if (data.rate) {
-          hadExchangeRateRef.current = true;
-          setExchangeRate(Number(data.rate));
-        } else {
-          setExchangeRate(0);
-          setRateError("Rates unavailable");
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        setExchangeRate(0);
-        setRateError(
-          getRequestErrorMessage(err, {
-            fallback: "Rates unavailable",
-            hasCachedData: hadExchangeRateRef.current,
-          }),
-        );
-      })
-      .finally(() => {
-        setIsLoadingRate(false);
-      });
-  }, [fromCurrency, toCurrency]);
 
   const convertedAmount = useMemo(() => {
     if (!amount || isNaN(parseFloat(amount)) || exchangeRate === 0) return "";
