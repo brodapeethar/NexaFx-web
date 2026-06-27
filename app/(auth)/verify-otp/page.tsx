@@ -7,6 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthStore } from '@/hooks/use-auth-store';
 import { useRouter } from 'next/navigation';
+import { RateLimitError } from '@/lib/api-client';
+import { RateLimitMessage } from '@/components/shared/rate-limit-message';
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function VerifyOtpPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rateLimitError, setRateLimitError] = useState<RateLimitError | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -59,6 +62,8 @@ export default function VerifyOtpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setRateLimitError(null);
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       setError('Please enter all 6 digits');
@@ -79,13 +84,18 @@ export default function VerifyOtpPage() {
       router.push('/dashboard');
     } catch (err: unknown) {
       setIsLoading(false);
-      setError(err instanceof Error ? err.message : 'Invalid or expired OTP');
+      if (err instanceof RateLimitError) {
+        setRateLimitError(err);
+      } else {
+        setError(err instanceof Error ? err.message : 'Invalid or expired OTP');
+      }
     }
   };
 
   const handleResend = async () => {
     setOtp(['', '', '', '', '', '']);
     setError('');
+    setRateLimitError(null);
     inputRefs.current[0]?.focus();
     const storedEmail = sessionStorage.getItem('login-email');
     if (!storedEmail) {
@@ -94,9 +104,17 @@ export default function VerifyOtpPage() {
     }
     try {
       await resendLoginOtp({ email: storedEmail });
-    } catch {
-      setError('Failed to resend code');
+    } catch (err: unknown) {
+      if (err instanceof RateLimitError) {
+        setRateLimitError(err);
+      } else {
+        setError('Failed to resend code');
+      }
     }
+  };
+
+  const handleRetry = () => {
+    setRateLimitError(null);
   };
 
   const isComplete = otp.every((digit) => digit !== '');
@@ -131,6 +149,15 @@ export default function VerifyOtpPage() {
             </p>
           </div>
 
+          {rateLimitError && (
+            <div className="mb-4">
+              <RateLimitMessage
+                retryAfterSeconds={rateLimitError.retryAfterSeconds}
+                onRetry={handleRetry}
+              />
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
               {error}
@@ -163,7 +190,7 @@ export default function VerifyOtpPage() {
                 type="button"
                 onClick={handleResend}
                 className="text-xs text-gray-600 hover:text-gray-800"
-                disabled={isLoading}
+                disabled={isLoading || !!rateLimitError}
               >
                 Resend code
               </button>
@@ -171,7 +198,7 @@ export default function VerifyOtpPage() {
 
             <button
               type="submit"
-              disabled={!isComplete || isLoading}
+              disabled={!isComplete || isLoading || !!rateLimitError}
               className="w-full py-2.5 bg-[#F39A00] hover:bg-[#da8a00] text-black font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-6"
             >
               {isLoading ? 'Processing...' : 'Proceed'}
@@ -215,7 +242,7 @@ export default function VerifyOtpPage() {
           className="flex items-center justify-center"
           style={{ minHeight: 'calc(100vh - 120px)' }}
         >
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
             <div className="mb-8">
               <h1 className="text-2xl font-semibold text-center mb-4">
                 VERIFY CODE
