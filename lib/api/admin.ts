@@ -157,6 +157,48 @@ export async function updateUserKyc(id: string, status: 'Verified' | 'Unverified
     });
 }
 
+export interface PushNotification {
+  id: string;
+  title: string;
+  message: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function getAdminPushNotifications(): Promise<PushNotification[]> {
+  const response = await apiClient<any>('/admin/push-notifications', {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  return response?.data ?? response ?? [];
+}
+
+export async function createAdminPushNotification(data: { title: string; message: string }): Promise<PushNotification> {
+  const response = await apiClient<any>('/admin/push-notifications', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return response?.data ?? response;
+}
+
+export interface PlatformConfig {
+  supportedCurrencies: string[]
+  defaultLanguage: string
+  supportEmail: string
+  maxDailyTransactionsPerUser: number
+  kycRequiredForWithdrawal: boolean
+  kycRequiredForConversion: boolean
+  newUserRegistrationEnabled: boolean
+  updatedAt: string
+}
+
+export const getPlatformConfig = (): Promise<PlatformConfig> =>
+  apiClient('/admin/config');
+
+export const updatePlatformConfig = (updates: Partial<PlatformConfig>): Promise<PlatformConfig> =>
+  apiClient('/admin/config', { method: 'PATCH', body: JSON.stringify(updates) });
+
 export async function getAdminTransactions(query: AdminTransactionsQuery = {}): Promise<{ data: AdminTransaction[]; total: number }> {
     const params: Record<string, string> = {};
     if (query.page) params.page = String(query.page);

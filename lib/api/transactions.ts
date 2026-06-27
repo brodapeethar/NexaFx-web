@@ -166,6 +166,9 @@ export async function getTransactionById(id: string): Promise<Transaction> {
   return mapTransaction(dto);
 }
 
+export const resendTransactionConfirmation = (id: string): Promise<void> =>
+  apiClient(`/transactions/${id}/resend-confirmation`, { method: 'POST', useProxy: false });
+
 // ==================== Withdrawal ====================
 
 // Confirmed against backend src/transactions/dtos/transaction.dto.ts:
