@@ -157,6 +157,59 @@ export async function updateUserKyc(id: string, status: 'Verified' | 'Unverified
     });
 }
 
+// ==================== System Health (#324) ====================
+
+export type ServiceStatus = 'ok' | 'degraded' | 'down' | 'unknown'
+
+export interface SystemHealth {
+  api: ServiceStatus
+  database: ServiceStatus
+  stellar: ServiceStatus
+  moonpay: ServiceStatus
+  exchangeRates: ServiceStatus
+  lastChecked: string
+}
+
+export const getSystemHealth = (): Promise<SystemHealth> =>
+  apiClient('/admin/health', { headers: getAuthHeaders() })
+
+// ==================== KYC Review (#323) ====================
+
+export interface KycDocument {
+  type: 'id_front' | 'id_back' | 'selfie' | 'proof_of_address'
+  url: string
+  uploadedAt: string
+}
+
+export interface KycSubmission {
+  userId: string
+  email: string
+  firstName: string
+  lastName: string
+  submittedAt: string
+  documents: KycDocument[]
+}
+
+export const getPendingKyc = (): Promise<KycSubmission[]> =>
+  apiClient('/admin/kyc/pending', { headers: getAuthHeaders() })
+
+export const getKycSubmission = (userId: string): Promise<KycSubmission> =>
+  apiClient(`/admin/kyc/${userId}`, { headers: getAuthHeaders() })
+
+export const approveKyc = (userId: string): Promise<void> =>
+  apiClient(`/admin/kyc/${userId}/approve`, { method: 'POST', headers: getAuthHeaders() })
+
+export const rejectKyc = (userId: string, reason: string): Promise<void> =>
+  apiClient(`/admin/kyc/${userId}/reject`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ reason }) })
+
+// ==================== Bulk User Actions (#322) ====================
+
+export const bulkDeactivateUsers = (userIds: string[]): Promise<void> =>
+  apiClient('/admin/users/bulk-deactivate', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ userIds }) })
+
+export const bulkSendNotification = (userIds: string[], title: string, message: string): Promise<void> =>
+  apiClient('/admin/push-notifications/bulk', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ userIds, title, message }) })
+
 export async function getAdminTransactions(query: AdminTransactionsQuery = {}): Promise<{ data: AdminTransaction[]; total: number }> {
     const params: Record<string, string> = {};
     if (query.page) params.page = String(query.page);
