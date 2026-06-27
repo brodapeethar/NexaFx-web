@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-import SignInPageClient from "./sign-in-client";
+'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { login } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { RateLimitError } from '@/lib/api-client';
-import { RateLimitMessage } from '@/components/shared/rate-limit-message';
 
-export default function SignInPage() {
+export default function SignInPageClient() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [rateLimitError, setRateLimitError] = useState<RateLimitError | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setRateLimitError(null);
 
     if (!email || !password) {
       setError('Please fill in all fields');
@@ -37,16 +32,8 @@ export default function SignInPage() {
       router.push('/verify-otp');
     } catch (err: unknown) {
       setIsLoading(false);
-      if (err instanceof RateLimitError) {
-        setRateLimitError(err);
-      } else {
-        setError(err instanceof Error ? err.message : 'Login failed');
-      }
+      setError(err instanceof Error ? err.message : 'Login failed');
     }
-  };
-
-  const handleRetry = () => {
-    setRateLimitError(null);
   };
 
   return (
@@ -82,15 +69,6 @@ export default function SignInPage() {
               Hey, Welcome back
             </p>
           </div>
-
-          {rateLimitError && (
-            <div className="mb-4">
-              <RateLimitMessage
-                retryAfterSeconds={rateLimitError.retryAfterSeconds}
-                onRetry={handleRetry}
-              />
-            </div>
-          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
@@ -184,7 +162,7 @@ export default function SignInPage() {
 
             <button
               type="submit"
-              disabled={isLoading || !!rateLimitError}
+              disabled={isLoading}
               className="w-full py-2.5 bg-[#F39A00] hover:bg-[#da8a00] text-black font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-6"
             >
               {isLoading ? 'Logging in...' : 'Log in'}
@@ -222,15 +200,6 @@ export default function SignInPage() {
               Hey, welcome back
             </p>
           </div>
-
-          {rateLimitError && (
-            <div className="mb-4">
-              <RateLimitMessage
-                retryAfterSeconds={rateLimitError.retryAfterSeconds}
-                onRetry={handleRetry}
-              />
-            </div>
-          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
