@@ -6,6 +6,7 @@ import { Loader2, ArrowDown } from "lucide-react";
 import { Sidebar } from "../../components/dashboard/sidebar";
 import { Topbar } from "../../components/dashboard/topbar";
 import { NetworkStatusBanner } from "@/components/shared/network-status-banner";
+import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../hooks/use-auth-store";
 import { useRouter } from "next/navigation";

@@ -1,4 +1,6 @@
 "use client";
+import { useCallback, useState } from "react";
+import { Download, Upload } from "lucide-react";
 import { AccountOverview } from "@/components/dashboard/account-overview";
 import DepositMethods from "@/components/dashboard/deposit";
 import { ConversionChart } from "@/components/dashboard/conversion-chart";
@@ -8,8 +10,8 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { ConversionHistory } from "@/components/dashboard/conversion-history";
 import { WithdrawalModal } from "@/components/dashboard/withdrawal/WithdrawalModal";
 import { useWithdrawalStore } from "@/hooks/useWithdrawalStore";
-import { Download, Upload } from "lucide-react";
-import { useState } from "react";
+import { PullToRefresh } from "@/components/shared/pull-to-refresh";
+import { useNotificationsStore } from "@/hooks/use-notifications-store";
 
 export default function DashboardPage() {
   const [openDeposit, setOpenDeposit] = useState(false);
@@ -17,8 +19,16 @@ export default function DashboardPage() {
   const toggleDeposit = () => {
     setOpenDeposit(!openDeposit);
   };
+  const fetchNotifications = useNotificationsStore((s) => s.fetchNotifications);
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      fetchNotifications(),
+    ]);
+  }, [fetchNotifications]);
 
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="flex flex-col gap-5 md:gap-10">
       <WithdrawalModal />
       {openDeposit ? (
@@ -65,5 +75,6 @@ export default function DashboardPage() {
         </>
       )}
     </div>
+    </PullToRefresh>
   );
 }
