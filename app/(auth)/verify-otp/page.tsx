@@ -63,6 +63,7 @@ export default function VerifyOtpPage() {
         setApiError("Login completed, but no session tokens were returned.");
         return;
       }
+
       setAuth(
         {
           id: res.user.id,
