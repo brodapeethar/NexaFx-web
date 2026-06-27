@@ -149,23 +149,14 @@ export async function deleteAdminUser(id: string): Promise<void> {
     });
 }
 
-export async function updateUserKyc(id: string, status: 'Verified' | 'Unverified'): Promise<void> {
-    await apiClient<void>(`/admin/users/${id}/kyc`, {
-        method: 'PATCH',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ status }),
-    });
-}
-
 export interface KycSubmission {
   id: string;
-  userId: string;
   userName: string;
   email: string;
   documentType: string;
-  documentUrl: string;
-  submissionDate: string;
   status: 'Pending' | 'Approved' | 'Rejected';
+  submittedAt: string;
+  reviewedAt?: string;
 }
 
 export async function getAdminKycSubmissions(): Promise<KycSubmission[]> {
@@ -173,22 +164,15 @@ export async function getAdminKycSubmissions(): Promise<KycSubmission[]> {
     method: 'GET',
     headers: getAuthHeaders(),
   });
-
-  const data = (response?.data ?? response?.submissions ?? response?.items ?? (Array.isArray(response) ? response : [])) as any[];
-
-  return data.map((item: any) => ({
+  const data = response?.data ?? response?.submissions ?? response ?? [];
+  return (Array.isArray(data) ? data : []).map((item: any) => ({
     id: item.id ?? item._id ?? '',
-    userId: item.userId ?? item.user_id ?? '',
-    userName: item.userName ?? item.user?.name ?? item.name ?? 'Unknown',
+    userName: item.userName ?? item.username ?? item.user?.name ?? '',
     email: item.email ?? item.user?.email ?? '',
     documentType: item.documentType ?? item.document_type ?? 'Unknown',
-    documentUrl: item.documentUrl ?? item.document_url ?? '',
-    submissionDate: item.createdAt ?? item.submissionDate ?? item.submitted_at ?? new Date().toISOString(),
-    status: (item.status === 'Approved' || item.status === 'approved'
-      ? 'Approved'
-      : item.status === 'Rejected' || item.status === 'rejected'
-        ? 'Rejected'
-        : 'Pending') as 'Pending' | 'Approved' | 'Rejected',
+    status: item.status ?? 'Pending',
+    submittedAt: item.submittedAt ?? item.createdAt ?? new Date().toISOString(),
+    reviewedAt: item.reviewedAt ?? undefined,
   }));
 }
 
@@ -200,65 +184,12 @@ export async function updateKycStatus(id: string, status: 'Approved' | 'Rejected
   });
 }
 
-export interface IpAllowlistEntry {
-  id: string;
-  ipAddress: string;
-  label: string;
-  addedBy: string;
-  dateAdded: string;
-  isActive: boolean;
-}
-
-export async function getIpAllowlist(): Promise<IpAllowlistEntry[]> {
-  const response = await apiClient<any>('/admin/ip-allowlist', {
-    method: 'GET',
-    headers: getAuthHeaders(),
-  });
-  const data = (response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])) as any[];
-  return data.map((entry: any) => ({
-    id: entry.id ?? entry._id ?? '',
-    ipAddress: entry.ipAddress ?? entry.ip ?? '',
-    label: entry.label ?? entry.description ?? '',
-    addedBy: entry.addedBy ?? entry.createdBy ?? '',
-    dateAdded: entry.dateAdded ?? entry.createdAt
-      ? new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : '',
-    isActive: entry.isActive ?? true,
-  }));
-}
-
-export async function addIpToAllowlist(data: { ipAddress: string; label: string }): Promise<IpAllowlistEntry> {
-  const response = await apiClient<any>('/admin/ip-allowlist', {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-  const entry = response?.data ?? response;
-  return {
-    id: entry.id ?? entry._id ?? '',
-    ipAddress: entry.ipAddress ?? entry.ip ?? '',
-    label: entry.label ?? entry.description ?? '',
-    addedBy: entry.addedBy ?? entry.createdBy ?? '',
-    dateAdded: entry.dateAdded ?? entry.createdAt
-      ? new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : '',
-    isActive: entry.isActive ?? true,
-  };
-}
-
-export async function removeIpFromAllowlist(id: string): Promise<void> {
-  await apiClient<void>(`/admin/ip-allowlist/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
-}
-
-export async function toggleIpRestriction(id: string, isActive: boolean): Promise<void> {
-  await apiClient<void>(`/admin/ip-allowlist/${id}/toggle`, {
-    method: 'PATCH',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ isActive }),
-  });
+export async function updateUserKyc(id: string, status: 'Verified' | 'Unverified'): Promise<void> {
+    await apiClient<void>(`/admin/users/${id}/kyc`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+    });
 }
 
 export async function getAdminTransactions(query: AdminTransactionsQuery = {}): Promise<{ data: AdminTransaction[]; total: number }> {
@@ -304,4 +235,85 @@ export async function getAdminTransactions(query: AdminTransactionsQuery = {}): 
     });
 
     return { data: mappedData, total };
+}
+
+export interface Announcement {
+    id: string;
+    title: string;
+    message: string;
+    status: 'Active' | 'Inactive';
+    colorTheme: string;
+    targetPage: string;
+    createdAt: string;
+}
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+    const response = await apiClient<any>('/admin/announcements', {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    const data = response?.data ?? response?.announcements ?? (Array.isArray(response) ? response : []);
+    return data.map((item: any) => ({
+        id: item.id ?? item._id ?? '',
+        title: item.title ?? '',
+        message: item.message ?? '',
+        status: item.status === 'Active' || item.status === 'active' ? 'Active' as const : 'Inactive' as const,
+        colorTheme: item.colorTheme ?? 'yellow',
+        targetPage: item.targetPage ?? 'all',
+        createdAt: item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+              })
+            : '',
+    }));
+}
+
+export async function createAnnouncement(data: {
+    title: string;
+    message: string;
+    colorTheme: string;
+    targetPage: string;
+}): Promise<Announcement> {
+    const response = await apiClient<any>('/admin/announcements', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    const item = response?.data ?? response;
+    return {
+        id: item.id ?? item._id ?? '',
+        title: item.title ?? data.title,
+        message: item.message ?? data.message,
+        status: 'Active',
+        colorTheme: item.colorTheme ?? data.colorTheme,
+        targetPage: item.targetPage ?? data.targetPage,
+        createdAt: item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+              })
+            : new Date().toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+              }),
+    };
+}
+
+export async function toggleAnnouncement(id: string, status: 'Active' | 'Inactive'): Promise<void> {
+    await apiClient<void>(`/admin/announcements/${id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+    });
+}
+
+export async function deleteAnnouncement(id: string): Promise<void> {
+    await apiClient<void>(`/admin/announcements/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
 }

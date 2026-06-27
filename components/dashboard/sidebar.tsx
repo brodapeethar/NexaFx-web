@@ -10,6 +10,8 @@ import {
   ChevronRight,
   ArrowUpDown,
   Gift,
+  Repeat,
+  LifeBuoy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/hooks/use-sidebar-store";
@@ -19,6 +21,8 @@ const menuItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard" },
   { icon: ArrowUpDown, label: "Convert", href: "/convert" },
   { icon: Mail, label: "Transactions", href: "/transactions" },
+  { icon: Repeat, label: "Transfers", href: "/transfers" },
+  { icon: LifeBuoy, label: "Help", href: "/help" },
   { icon: Gift, label: "Referrals", href: "/referrals" },
   { icon: CircleUserRound, label: "Settings", href: "/settings" },
 ];
