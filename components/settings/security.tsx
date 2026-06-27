@@ -10,7 +10,6 @@ export function Security() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [confirmText, setConfirmText] = useState("");
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
@@ -24,13 +23,6 @@ export function Security() {
         err instanceof Error ? err.message : "Failed to delete account"
       );
       setIsDeleting(false);
-    }
-  };
-  
-  const handleCloseConfirm = () => {
-    if (!isDeleting) {
-      setShowConfirm(false);
-      setConfirmText("");
     }
   };
 
@@ -129,28 +121,17 @@ export function Security() {
         <>
           <div
             className="fixed inset-0 z-50 bg-black/50"
-            onClick={handleCloseConfirm}
+            onClick={() => !isDeleting && setShowConfirm(false)}
           />
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-card rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
               <h3 className="text-base font-semibold text-center text-foreground">
-                Delete Account
+                Are you sure?
               </h3>
               <p className="text-sm text-muted-foreground text-center">
                 This action cannot be undone. Your account and all associated
                 data will be permanently deleted.
               </p>
-              <p className="text-xs text-muted-foreground text-center">
-                Type <strong>DELETE</strong> below to confirm.
-              </p>
-              <input
-                type="text"
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder="Type DELETE to confirm"
-                disabled={isDeleting}
-                className="w-full px-4 py-2.5 bg-muted border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-[#F39A00] transition-all text-sm text-foreground text-center"
-              />
               {deleteError && (
                 <p className="text-xs text-destructive text-center">
                   {deleteError}
@@ -158,7 +139,7 @@ export function Security() {
               )}
               <div className="flex gap-3">
                 <button
-                  onClick={handleCloseConfirm}
+                  onClick={() => setShowConfirm(false)}
                   disabled={isDeleting}
                   className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
                 >
@@ -166,7 +147,7 @@ export function Security() {
                 </button>
                 <button
                   onClick={handleDeleteAccount}
-                  disabled={isDeleting || confirmText !== "DELETE"}
+                  disabled={isDeleting}
                   className="flex-1 py-2.5 rounded-lg bg-[#E90004] text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-60"
                 >
                   {isDeleting ? "Deleting..." : "Delete Account"}

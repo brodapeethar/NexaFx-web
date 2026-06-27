@@ -52,8 +52,29 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, [currentPage, debouncedSearch]);
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchUsers]);
+
+  // Filter users based on search query
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    
+    const query = searchQuery.toLowerCase();
+    return users.filter(user => 
+      user.email.toLowerCase().includes(query) ||
+      (user.username && user.username.toLowerCase().includes(query))
+    );
+  }, [users, searchQuery]);
+
+  // Paginate filtered users
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;

@@ -62,10 +62,48 @@ export function ConvertForm() {
       });
   }, []);
 
-  useEffect(() => {
-    if (!fromCurrency || !toCurrency) return;
-    setIsLoadingRate(true);
-    setRateError(null);
+    useEffect(() => {
+        if (!fromCurrency || !toCurrency) return;
+        
+        let active = true;
+        
+        Promise.resolve().then(() => {
+            if (active) {
+                setIsLoadingRate(true);
+                setRateError(null);
+            }
+        });
+        
+        fetch(`/api/exchange-rates?from=${fromCurrency}&to=${toCurrency}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to fetch rate");
+                return res.json();
+            })
+            .then(data => {
+                if (!active) return;
+                if (data.rate) {
+                    setExchangeRate(Number(data.rate));
+                } else {
+                    setExchangeRate(0);
+                    setRateError("Rates unavailable");
+                }
+            })
+            .catch(err => {
+                if (!active) return;
+                console.error(err);
+                setExchangeRate(0);
+                setRateError("Rates unavailable");
+            })
+            .finally(() => {
+                if (active) {
+                    setIsLoadingRate(false);
+                }
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [fromCurrency, toCurrency]);
 
     getExchangeRate(fromCurrency, toCurrency)
       .then((data) => {
