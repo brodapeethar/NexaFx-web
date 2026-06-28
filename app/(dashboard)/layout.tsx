@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "../../components/dashboard/sidebar";
 import { Topbar } from "../../components/dashboard/topbar";
 import { NetworkStatusBanner } from "@/components/shared/network-status-banner";
+import { SessionTimeoutModal } from "@/components/shared/session-timeout-modal";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../hooks/use-auth-store";
 import { useRouter } from "next/navigation";
 import { useSidebarStore } from "../../hooks/use-sidebar-store";
+import { useSessionTimeout } from "@/hooks/use-session-timeout";
 
 export default function DashboardLayout({
   children,
@@ -17,8 +19,58 @@ export default function DashboardLayout({
 }) {
   const { isOpen, close } = useSidebarStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { isAuthenticated, accessToken } = useAuthStore();
+  const { isAuthenticated, accessToken, logout, refreshToken } = useAuthStore();
   const router = useRouter();
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(2 * 60 * 1000); // 2 minutes
+
+  const handleStaySignedIn = async () => {
+    try {
+      const refreshTokenStr = typeof window !== "undefined" 
+        ? localStorage.getItem("refresh_token") 
+        : null;
+      
+      if (refreshTokenStr) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken: refreshTokenStr }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data;
+          if (newAccessToken && newRefreshToken) {
+            refreshToken(newAccessToken, newRefreshToken);
+            return;
+          }
+        }
+      }
+      throw new Error("Failed to refresh token");
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+      logout();
+      router.push("/sign-in");
+    }
+  };
+
+  const handleTimeout = () => {
+    logout();
+    router.push("/sign-in");
+  };
+
+  const handleWarn = () => {
+    setShowSessionModal(true);
+    setRemainingTime(2 * 60 * 1000); // 2 minutes
+  };
+
+  useSessionTimeout({
+    onWarn: handleWarn,
+    onTimeout: handleTimeout,
+  });
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -72,6 +124,13 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      <SessionTimeoutModal
+        isOpen={showSessionModal}
+        onClose={() => setShowSessionModal(false)}
+        onStaySignedIn={handleStaySignedIn}
+        remainingTimeMs={remainingTime}
+      />
     </div>
   );
 }
