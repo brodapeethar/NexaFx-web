@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { AdminTransaction, flagTransaction, unflagTransaction } from "@/lib/api/admin";
+import { ListFilter } from "lucide-react";
+import { AdminTransaction } from "@/lib/api/admin";
 import { TypeTransaction } from "./TypeTransaction";
-import { Flag, X } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface TableTransactionProps {
   transactions: AdminTransaction[];
@@ -119,41 +119,12 @@ export function TableTransaction({ transactions }: TableTransactionProps) {
           )}
         </tbody>
       </table>
-
-      {/* Flag Reason Dialog */}
-      {flagDialogId && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setFlagDialogId(null)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Flag Transaction</h3>
-            <textarea
-              value={flagReason}
-              onChange={e => setFlagReason(e.target.value)}
-              placeholder="Reason for flagging..."
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 min-h-[100px] resize-none"
-            />
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => { setFlagDialogId(null); setFlagReason("") }}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleFlag(flagDialogId)}
-                disabled={!flagReason.trim() || flagLoading}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {flagLoading ? "Flagging..." : "Flag"}
-              </button>
-            </div>
-          </div>
-        </div>
+      {transactions.length === 0 && (
+        <EmptyState
+          icon={<ListFilter className="h-16 w-16" />}
+          title="No transactions found"
+          description="No transactions match the current filters."
+        />
       )}
     </div>
   );
