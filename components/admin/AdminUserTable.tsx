@@ -1,7 +1,8 @@
 'use client';
 
+import { Users } from 'lucide-react';
 import { AdminUser } from '@/lib/api/admin';
-import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/shared/empty-state';
 
 interface AdminUserTableProps {
   users: AdminUser[];
@@ -10,32 +11,16 @@ interface AdminUserTableProps {
   onSelectionChange?: (ids: string[]) => void;
 }
 
-export function AdminUserTable({ users, onUserClick, selectedIds = [], onSelectionChange }: AdminUserTableProps) {
-  const allSelected = users.length > 0 && users.every(u => selectedIds.includes(u.id));
-  const someSelected = users.some(u => selectedIds.includes(u.id));
-
-  const handleSelectAll = () => {
-    if (!onSelectionChange) return;
-    if (allSelected) {
-      onSelectionChange(selectedIds.filter(id => !users.find(u => u.id === id)));
-    } else {
-      const newIds = [...selectedIds, ...users.map(u => u.id).filter(id => !selectedIds.includes(id))];
-      onSelectionChange(newIds);
-    }
-  };
-
-  const handleSelectOne = (id: string) => {
-    if (!onSelectionChange) return;
-    if (selectedIds.includes(id)) {
-      onSelectionChange(selectedIds.filter(sid => sid !== id));
-    } else {
-      onSelectionChange([...selectedIds, id]);
-    }
-  };
-
-  const handleRowClick = (user: AdminUser) => {
-    onUserClick(user);
-  };
+export function AdminUserTable({ users, onUserClick }: AdminUserTableProps) {
+  if (users.length === 0) {
+    return (
+      <EmptyState
+        icon={<Users className="h-16 w-16" />}
+        title="No users yet"
+        description="Users will appear here once they sign up."
+      />
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg overflow-x-auto w-full max-w-[100vw]">
@@ -67,14 +52,7 @@ export function AdminUserTable({ users, onUserClick, selectedIds = [], onSelecti
           </tr>
         </thead>
         <tbody>
-          {users.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="py-10 text-center text-gray-500">
-                No users found.
-              </td>
-            </tr>
-          ) : (
-            users.map((user) => (
+          {users.map((user) => (
               <tr
                 key={user.id}
                 className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -106,8 +84,7 @@ export function AdminUserTable({ users, onUserClick, selectedIds = [], onSelecti
                   <span className="text-sm font-semibold text-gray-900">{user.createdAt}</span>
                 </td>
               </tr>
-            ))
-          )}
+          ))}
         </tbody>
       </table>
     </div>
