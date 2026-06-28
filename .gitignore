@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# e2e / playwright
+/e2e/.auth/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/
@@ -29,6 +35,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+pnpm-lock.yaml
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -39,3 +46,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+app/.vscode/
+
+*storybook.log
+storybook-static

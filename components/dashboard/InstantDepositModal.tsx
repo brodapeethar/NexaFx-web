@@ -5,6 +5,11 @@ import { X, ChevronRight } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { CopyButton } from '@/components/ui/copy-button';
+import React, { useState, useRef } from 'react';
+import { X, Copy, ChevronRight } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useFocusTrap } from '@/hooks/use-focus-trap';
+import { haptics } from '@/lib/utils/haptics';
 
 type InstantDepositModalType = {
   onClose: () => void;
@@ -14,11 +19,19 @@ type InstantDepositModalType = {
 const InstantModalDeposit: React.FC<InstantDepositModalType> = ({
   onClose,
 }) => {
+  const [copied, setCopied] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(true, onClose, modalRef);
 
   const walletAddress = '0x5A08FcdBEA516Cf086572157791dB12CA3beF1B32';
+
+  const handleCopyAddress = () => {
+    navigator.clipboard.writeText(walletAddress);
+    setCopied(true);
+    haptics.light();
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <>
@@ -80,10 +93,24 @@ const InstantModalDeposit: React.FC<InstantDepositModalType> = ({
                 {walletAddress}
               </span>
               <CopyButton value={walletAddress} label='Copy wallet address' size='sm' />
+              <button
+                onClick={handleCopyAddress}
+                className='p-1 hover:bg-background rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1'
+                aria-label='Copy wallet address'
+              >
+                <Copy className='w-4 h-4 text-muted-foreground' />
+              </button>
             </div>
           </div>
 
           <div className='flex gap-3  md:flex-row flex-col'>
+            <button
+              onClick={handleCopyAddress}
+              className='flex-1 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors md:text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2'
+              aria-label='Copy wallet address button'
+            >
+              {copied ? 'Copied!' : 'Copy Address'}
+            </button>
             <button
               onClick={onClose}
               className='flex-1 py-3 border-2 border-border hover:bg-muted text-foreground font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2'

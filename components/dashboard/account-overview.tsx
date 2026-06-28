@@ -10,6 +10,15 @@ import { useEffect, useState } from "react";
 import { getBalances } from "@/lib/api/wallet";
 import { getProfile } from "@/lib/api/users";
 import { CopyButton } from "@/components/ui/copy-button";
+  Copy,
+  Check,
+  CircleDollarSign,
+} from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
+import { getBalances } from "@/lib/api/wallet";
+import { getProfile } from "@/lib/api/users";
+import { haptics } from "@/lib/utils/haptics";
 
 const truncateAddress = (addr: string) =>
   `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -25,12 +34,46 @@ export function AccountOverview({
   onDepositClick,
   onWithdrawClick,
 }: AccountOverviewTypes) {
+  const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState("");
   const [balance, setBalance] = useState("");
   const [ngnBalance, setNgnBalance] = useState("");
   const [usdBalance, setUsdBalance] = useState("");
+
+  const wsBalance = useWebSocket((s) => s.balance);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const subscribe = useWebSocket((s) => s.subscribe);
+
+  useEffect(() => {
+    if (accessToken) {
+      subscribe(accessToken);
+    }
+  }, [accessToken, subscribe]);
+
+  useEffect(() => {
+    if (wsBalance && wsBalance.length > 0) {
+      setBalances(wsBalance);
+      setError(null);
+
+      const ngnItem = wsBalance.find(
+        (b) => b.currency.toUpperCase() === "NGN"
+      );
+      const usdItem = wsBalance.find(
+        (b) => b.currency.toUpperCase() === "USD"
+      );
+      const firstItem = wsBalance[0];
+
+      if (ngnItem) {
+        setBalance(formatCurrency(ngnItem.amount, "NGN"));
+      } else if (usdItem) {
+        setBalance(formatCurrency(usdItem.amount, "USD"));
+      } else {
+        setBalance(formatCurrency(firstItem.amount, firstItem.currency));
+      }
+    }
+  }, [wsBalance]);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +133,17 @@ export function AccountOverview({
       cancelled = true;
     };
   }, []);
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(walletAddress);
+      setCopied(true);
+      haptics.light();
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy address:", err);
+    }
+  };
+
   return (
     <section className="account-overview-bg rounded-b-xl md:rounded-b-none md:ml-4">
       <div className="relative space-y-5 md:space-y-10 overflow-hidden p-3 md:p-4">
@@ -126,6 +180,23 @@ export function AccountOverview({
                     {truncateAddress(walletAddress)}
                   </p>
                   <CopyButton value={walletAddress} label="Copy wallet address" size="sm" />
+                  <Tooltip content={`Stellar wallet: ${walletAddress}`}>
+                    <p className="text-xs font-medium text-foreground">
+                      {truncateAddress(walletAddress)}
+                    </p>
+                  </Tooltip>
+                  <button
+                    onClick={handleCopyAddress}
+                    aria-label="Copy wallet address"
+                    className="transition-colors"
+                    title={copied ? "Copied!" : "Copy address"}
+                  >
+                    {copied ? (
+                      <Check className="size-4 text-green-500" />
+                    ) : (
+                      <Copy className="size-4" />
+                    )}
+                  </button>
                 </div>
               ) : null}
             </div>
