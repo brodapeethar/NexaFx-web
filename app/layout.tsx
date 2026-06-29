@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,9 +89,12 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${manrope.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster />
-        <PwaInstallPrompt />
+        <TooltipProvider>
+          <LanguageSwitcher />
+          {children}
+          <PwaInstallPrompt />
+          <Toaster />
+        </TooltipProvider>
       </body>
     </html>
   );

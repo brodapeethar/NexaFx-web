@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 import withPWA from "next-pwa";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin();
 
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
@@ -32,21 +35,21 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     domains: ["lh3.googleusercontent.com"],
-  },
-  async redirects() {
-    return [{ source: "/sign-in", destination: "/login", permanent: true }];
-  },
-  async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
   },
   async redirects() {
     return [
-      {
-        source: "/login",
-        destination: "/sign-in",
-        permanent: true,
-      },
+      { source: "/sign-in", destination: "/login", permanent: true },
+      { source: "/login", destination: "/sign-in", permanent: true },
     ];
+  },
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders }];
   },
 };
 
@@ -55,4 +58,4 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
-})(nextConfig);
+})(withNextIntl()(nextConfig));

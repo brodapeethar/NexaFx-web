@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Bell, History } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AccountIcon, SecurityIcon } from "../icons";
-import { ProfileTab } from "./profile-tab";
-import { Security } from "./security";
-import { DangerZone } from "./danger-zone";
-import { Notification } from "./notification";
-import { getActivityLog } from "@/lib/api/activity";
-import { Pagination } from "@/components/shared/pagination";
 import {
+  AlertTriangle,
+  Bell,
+  History,
   ArrowUpFromLine,
   Edit3,
   KeyRound,
@@ -21,6 +15,15 @@ import {
   UserX,
   AlertCircle,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccountIcon, SecurityIcon } from "../icons";
+import { ProfileTab } from "./profile-tab";
+import { Security } from "./security";
+import { DangerZone } from "./danger-zone";
+import { Notification } from "./notification";
+import { Language } from "./language";
+import { getActivityLog } from "@/lib/api/activity";
+import { Pagination } from "@/components/shared/pagination";
 
 export function TabsSettings() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -62,6 +65,14 @@ export function TabsSettings() {
           />
           Danger Zone
         </TabsTrigger>
+        <TabsTrigger value="language">
+          <Bell
+            className="size-3.5"
+            color={activeTab === "language" ? "#000" : ""}
+            aria-hidden="true"
+          />
+          Language
+        </TabsTrigger>
         <TabsTrigger value="activity">
           <History
             color={activeTab === "activity" ? "#000" : ""}
@@ -82,6 +93,9 @@ export function TabsSettings() {
       </TabsContent>
       <TabsContent value="danger">
         <DangerZone />
+      </TabsContent>
+      <TabsContent value="language">
+        <Language />
       </TabsContent>
       <TabsContent value="activity">
         <ActivityContent />
