@@ -34,22 +34,14 @@ export function NotificationsPanel() {
     markAllAsRead,
     fetchNotifications,
     unreadCount,
+    removeNotification,
   } = useNotificationsStore();
-
-  useSwipeToClose({
-    onSwipe: close,
-    direction: "right",
-    disabled: !isOpen,
-  });
-
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
     }
   }, [isOpen, fetchNotifications]);
 
-  const { swipeOffset, onTouchStart, onTouchMove, onTouchEnd } =
-    useSwipeToClose({ onClose: close, direction: "right", threshold: 80 });
 
   if (!isOpen) return null;
 
@@ -61,19 +53,16 @@ export function NotificationsPanel() {
     markAllAsRead();
   };
 
+  const handleDelete = (id: string) => {
+    removeNotification(id);
+  };
   return (
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 z-40" onClick={close} />
 
       {/* Panel */}
-      <div
-        className="absolute top-full right-0 mt-2 w-100 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        style={{ transform: `translateX(${swipeOffset}px)`, transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none' }}
-      >
+      <div className="absolute top-full right-0 mt-2 w-100 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base font-semibold text-foreground">
@@ -117,6 +106,7 @@ export function NotificationsPanel() {
                   key={notification.id}
                   notification={notification}
                   onClick={() => handleNotificationClick(notification.id)}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
