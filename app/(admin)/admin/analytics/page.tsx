@@ -4,13 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronDown, UserPlus, ArrowUpDown, Clock, Coins, Loader2 } from "lucide-react";
 import { AdminMetricCard } from "@/components/admin/AdminMetricCard";
 import { RevenueChart } from "@/components/admin/RevenueChart";
-import {
-  getAdminMetrics,
-  getAdminUsers,
-  type AdminMetrics,
-  type AdminUser,
-} from "@/lib/api/admin";
+import { getAdminMetrics, getAdminUsers, AdminMetrics, AdminUser } from "@/lib/api/admin";
 import { getRequestErrorMessage, isOfflineError } from "@/lib/api-client";
+import { AdminMetricCardsSkeleton } from "@/components/shared/page-skeletons";
 
 export default function AnalyticsPage() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
@@ -22,31 +18,27 @@ export default function AnalyticsPage() {
   const hasCachedAnalyticsRef = useRef(false);
 
   useEffect(() => {
-    async function fetchAnalyticsData() {
+    async function loadData() {
       try {
         setLoading(true);
-        setError(null);
-        const [fetchedMetrics, fetchedUsersData] = await Promise.all([
+        const [metricsData, usersData] = await Promise.all([
           getAdminMetrics(),
           getAdminUsers({ page: 1, limit: 5 }),
         ]);
         hasCachedAnalyticsRef.current = true;
         setOfflineNotice(null);
-        setMetrics(fetchedMetrics);
-        setRecentUsers(fetchedUsersData.data || []);
-      } catch (err: unknown) {
-        console.error("Error fetching analytics data:", err);
+        setMetrics(metricsData);
+        setRecentUsers(usersData.data);
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to load admin analytics data", err);
         const hasCachedData = hasCachedAnalyticsRef.current;
-        if (isOfflineError(err)) {
-          if (hasCachedData) {
-            setOfflineNotice(
-              "You are offline. Showing cached analytics data."
-            );
-          } else {
-            setError(
-              "You are offline and no cached data is available. Please try again when online."
-            );
-          }
+        const message = getRequestErrorMessage(err, {
+          fallback: "Failed to load analytics data.",
+          hasCachedData,
+        });
+        if (isOfflineError(err) && hasCachedData) {
+          setOfflineNotice(message);
         } else {
           setError(
             getRequestErrorMessage(err, {
@@ -58,16 +50,11 @@ export default function AnalyticsPage() {
         setLoading(false);
       }
     }
-    fetchAnalyticsData();
+    loadData();
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-2">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
-        <p className="text-sm text-gray-500">Loading analytics...</p>
-      </div>
-    );
+    return <AdminMetricCardsSkeleton />;
   }
 
   if (error || !metrics) {
@@ -95,26 +82,10 @@ export default function AnalyticsPage() {
 
       {/* Metric cards */}
       <div className="flex flex-wrap gap-4">
-        <AdminMetricCard
-          label="Registered Users"
-          value={metrics?.registeredUsers ?? 0}
-          icon={UserPlus}
-        />
-        <AdminMetricCard
-          label="Total Transaction"
-          value={metrics?.totalTransactions ?? 0}
-          icon={ArrowUpDown}
-        />
-        <AdminMetricCard
-          label="Pending KYC"
-          value={metrics?.pendingKyc ?? 0}
-          icon={Clock}
-        />
-        <AdminMetricCard
-          label="Currency"
-          value={metrics?.currencies ?? 0}
-          icon={Coins}
-        />
+        <AdminMetricCard label="Registered Users" value={metrics.registeredUsers} icon={UserPlus} />
+        <AdminMetricCard label="Total Transaction" value={metrics.totalTransactions} icon={ArrowUpDown} />
+        <AdminMetricCard label="Pending KYC" value={metrics.pendingKyc} icon={Clock} />
+        <AdminMetricCard label="Currency" value={metrics.currencies} icon={Coins} />
       </div>
 
       {/* Overview section header */}
@@ -161,55 +132,29 @@ export default function AnalyticsPage() {
                 <th className="px-6 py-4 text-left">
                   <span className="inline-block h-3 w-3 rounded-full bg-gray-800" />
                 </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">
-                  User Email
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">
-                  Full Name
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">
-                  Phone Number
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">
-                  Added On
-                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">User Email</th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">Full Name</th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">Phone Number</th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 tracking-wide uppercase">Added On</th>
               </tr>
             </thead>
             <tbody>
               {recentUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
-                    No recent users found.
-                  </td>
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">No recent users found.</td>
                 </tr>
               ) : (
                 recentUsers.map((user) => {
-                  const fullName =
-                    user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : null;
+                  const fullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : null;
                   return (
-                    <tr
-                      key={user.id}
-                      className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
-                    >
+                    <tr key={user.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
-                        <span
-                          className={`inline-block h-2.5 w-2.5 rounded-full ${
-                            user.isActive ? "bg-green-500" : "bg-gray-300"
-                          }`}
-                        />
+                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${user.isActive ? "bg-green-500" : "bg-gray-300"}`} />
                       </td>
                       <td className="px-4 py-4 text-gray-900">{user.email}</td>
-                      <td className="px-4 py-4 text-gray-400">
-                        {fullName ?? "No name"}
-                      </td>
-                      <td className="px-4 py-4 text-gray-400">
-                        {user.phone ?? "No Phone number"}
-                      </td>
-                      <td className="px-4 py-4 font-semibold text-gray-900">
-                        {user.createdAt}
-                      </td>
+                      <td className="px-4 py-4 text-gray-400">{fullName ?? "No name"}</td>
+                      <td className="px-4 py-4 text-gray-400">{user.phone ?? "No Phone number"}</td>
+                      <td className="px-4 py-4 font-semibold text-gray-900">{user.createdAt}</td>
                     </tr>
                   );
                 })

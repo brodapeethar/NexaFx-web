@@ -1,7 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, Manrope } from "next/font/google";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import { ToastViewport } from "@/components/ui/toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { ThemeProvider } from "@/components/theme-provider";
+import { OfflineBanner } from "@/components/shared/offline-banner";
+import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warning";
+import { GlobalSearch } from "@/components/shared/global-search";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,14 +86,6 @@ export const viewport: Viewport = {
   themeColor: "#F39A00",
 };
 
-import { ThemeProvider } from "@/components/theme-provider";
-import { OfflineBanner } from "@/components/shared/offline-banner";
-import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warning";
-import { GlobalSearch } from "@/components/shared/global-search";
-
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -103,11 +105,16 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
-            <GlobalSearch />
-            <PwaInstallPrompt />
-            <OfflineBanner />
-            <SessionTimeoutWarning />
+            <TooltipProvider>
+              <LanguageSwitcher />
+              {children}
+              <GlobalSearch />
+              <PwaInstallPrompt />
+              <OfflineBanner />
+              <SessionTimeoutWarning />
+              <Toaster />
+              <ToastViewport />
+            </TooltipProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

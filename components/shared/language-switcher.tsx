@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const LOCALES = [
   { code: "en", name: "English" },
   { code: "fr", name: "Français" },
+  { code: "ha", name: "Hausa" },
+  { code: "yo", name: "Yoruba" },
+  { code: "ig", name: "Igbo" },
 ];
 
 export function LanguageSwitcher() {
@@ -20,8 +22,8 @@ export function LanguageSwitcher() {
     router.refresh();
   };
 
-  const currentLocale = typeof document !== 'undefined' 
-    ? document.cookie.match(/(?:^|; )NEXT_LOCALE=([^;]*)/)?.[1] || "en" 
+  const currentLocale = typeof document !== 'undefined'
+    ? document.cookie.match(/(?:^|; )NEXT_LOCALE=([^;]*)/)?.[1] || "en"
     : "en";
 
   return (
