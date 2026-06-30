@@ -1,19 +1,13 @@
-<<<<<<< HEAD
-import { useAuthStore } from '@/hooks/use-auth-store';
+import { useAuthStore } from "@/hooks/use-auth-store";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-const PROXY_URL = '/api/proxy';
-=======
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const PROXY_URL = "/api/proxy";
->>>>>>> upstream/v2
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
   useProxy?: boolean;
 }
 
-<<<<<<< HEAD
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
@@ -27,18 +21,21 @@ function onRefreshed(token: string) {
 }
 
 async function refreshToken(): Promise<string | null> {
-  const refreshTokenStr = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+  const refreshTokenStr =
+    typeof window !== "undefined"
+      ? localStorage.getItem("refresh_token")
+      : null;
   if (!refreshTokenStr) return null;
 
   try {
     const response = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: refreshTokenStr }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to refresh token');
+      throw new Error("Failed to refresh token");
     }
 
     const data = await response.json();
@@ -50,54 +47,26 @@ async function refreshToken(): Promise<string | null> {
     }
     return null;
   } catch (error) {
-    console.error('Refresh token error:', error);
+    console.error("Refresh token error:", error);
     useAuthStore.getState().logout();
     return null;
   }
 }
 
-=======
->>>>>>> upstream/v2
 export async function apiClient<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
   const { params, useProxy = true, ...fetchOptions } = options;
-<<<<<<< HEAD
-  
-  let url = '';
-  if (useProxy) {
-    url = `${PROXY_URL}${path.startsWith('/') ? path : `/${path}`}`;
-  } else {
-    url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
-  }
-  
-=======
 
   const url = useProxy
     ? `${PROXY_URL}${path.startsWith("/") ? path : `/${path}`}`
     : `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
->>>>>>> upstream/v2
   const searchParams = new URLSearchParams();
   if (params) {
     Object.keys(params).forEach((key) => searchParams.append(key, params[key]));
   }
-<<<<<<< HEAD
-  const finalUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
-
-  const getHeaders = () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-    const headers = new Headers(fetchOptions.headers || {});
-    if (!headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
-    }
-    if (token) {
-      if (useProxy) {
-        headers.set('x-client-token', token);
-      } else {
-        headers.set('Authorization', `Bearer ${token}`);
-=======
   const finalUrl = searchParams.toString()
     ? `${url}?${searchParams.toString()}`
     : url;
@@ -116,13 +85,11 @@ export async function apiClient<T>(
         headers.set("x-client-token", token);
       } else {
         headers.set("Authorization", `Bearer ${token}`);
->>>>>>> upstream/v2
       }
     }
     return headers;
   };
 
-<<<<<<< HEAD
   const executeRequest = (): Promise<Response> => {
     return fetch(finalUrl, {
       ...fetchOptions,
@@ -142,7 +109,7 @@ export async function apiClient<T>(
       } else {
         refreshSubscribers = [];
         const data = await response.clone().json().catch(() => ({}));
-        throw new Error(data?.message || 'Unauthorized');
+        throw new Error(data?.message || "Unauthorized");
       }
     } else {
       return new Promise<T>((resolve, reject) => {
@@ -151,7 +118,12 @@ export async function apiClient<T>(
             const retryResponse = await executeRequest();
             if (!retryResponse.ok) {
               const data = await retryResponse.json().catch(() => ({}));
-              reject(new Error(data?.message || `Request failed with status ${retryResponse.status}`));
+              reject(
+                new Error(
+                  data?.message ||
+                    `Request failed with status ${retryResponse.status}`,
+                ),
+              );
               return;
             }
             resolve(await retryResponse.json());
@@ -167,19 +139,9 @@ export async function apiClient<T>(
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw new Error(data?.message || `Request failed with status ${response.status}`);
-=======
-  const response = await fetch(finalUrl, {
-    ...fetchOptions,
-    headers: getHeaders(),
-  });
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
     throw new Error(
       data?.message || `Request failed with status ${response.status}`,
     );
->>>>>>> upstream/v2
   }
 
   return response.json();
