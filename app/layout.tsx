@@ -6,6 +6,12 @@ import { ToastViewport } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { ThemeProvider } from "@/components/theme-provider";
+import { OfflineBanner } from "@/components/shared/offline-banner";
+import { SessionTimeoutWarning } from "@/components/shared/session-timeout-warning";
+import { GlobalSearch } from "@/components/shared/global-search";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,26 +86,37 @@ export const viewport: Viewport = {
   themeColor: "#F39A00",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} antialiased`}
-      >
-        {children}
-        <ToastViewport />
         className={`${inter.variable} ${manrope.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TooltipProvider>
-          <LanguageSwitcher />
-          {children}
-          <PwaInstallPrompt />
-          <Toaster />
-        </TooltipProvider>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TooltipProvider>
+              <LanguageSwitcher />
+              {children}
+              <GlobalSearch />
+              <PwaInstallPrompt />
+              <OfflineBanner />
+              <SessionTimeoutWarning />
+              <Toaster />
+              <ToastViewport />
+            </TooltipProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
