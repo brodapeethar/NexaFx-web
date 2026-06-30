@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter, Manrope } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { ToastViewport } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -86,20 +87,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} antialiased`}
-      >
-        {children}
-        <ToastViewport />
         className={`${inter.variable} ${manrope.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TooltipProvider>
-          <LanguageSwitcher />
-          {children}
-          <PwaInstallPrompt />
-          <Toaster />
-        </TooltipProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <LanguageSwitcher />
+            {children}
+            <PwaInstallPrompt />
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
